@@ -7,24 +7,8 @@ import boto3
 import requests
 from airflow.operators.bash_operator import BashOperator
 import pandas as pd
-import numpy as np
-import requests
-from bs4 import BeautifulSoup
-import time
-import warnings
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
-from pyspark.sql import Row
 from pyspark.sql.functions import col, year, month, when, coalesce
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import matplotlib as mpl
-import seaborn as sns
-from matplotlib.ticker import FuncFormatter
-from matplotlib.ticker import ScalarFormatter
-import matplotlib.ticker as ticker
 
 pd.set_option('display.max_columns', None)
 warnings.filterwarnings('ignore')
