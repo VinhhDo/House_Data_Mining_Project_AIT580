@@ -116,22 +116,32 @@ SELECT * FROM Fact_House_Data
 
 
 --How has the preference for different property types changed over the years?
+WITH PropertyTypeDistribution AS (
+	SELECT
+        di.build_period_id,
+        di.property_type,
+        COUNT(fh.id) AS number_of_sales
+    FROM
+        Fact_House_Data fh
+    JOIN
+        Dim_House_Information di ON fh.house_info_id = di.house_info_id
+    JOIN
+        Dim_Calendar dc ON fh.calendar_id = dc.calendar_id
+    GROUP BY
+        di.build_period_id,
+        di.property_type
+)
+
 SELECT
-    di.build_period_id,
-    di.property_type,
-    COUNT(fh.id) AS number_of_sales
+    build_period_id,
+    property_type,
+    number_of_sales,
+    ROUND((number_of_sales * 100.0) / SUM(number_of_sales) OVER (PARTITION BY build_period_id), 2) AS percentage
 FROM
-    Fact_House_Data fh
-JOIN
-    Dim_House_Information di ON fh.house_info_id = di.house_info_id
-JOIN
-    Dim_Calendar dc ON fh.calendar_id = dc.calendar_id
-GROUP BY
-    di.build_period_id,
-    di.property_type
+    PropertyTypeDistribution
 ORDER BY
-    di.build_period_id,
-    di.property_type;
+    build_period_id,
+    property_type;
 
 
 
