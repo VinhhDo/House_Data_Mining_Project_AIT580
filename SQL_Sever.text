@@ -1,0 +1,174 @@
+-- Calendar Dimension
+CREATE TABLE Dim_Calendar (
+    calendar_id VARCHAR(70) NOT NULL PRIMARY KEY,
+    fulldate DATE NOT NULL,
+    dayofmonth INT NOT NULL,
+    month INT NOT NULL,
+    year INT NOT NULL
+);
+
+-- Market Dimension
+CREATE TABLE Dim_Market (
+    market_id VARCHAR(70) NOT NULL PRIMARY KEY,
+    median_sale_price DECIMAL(18, 2),
+    median_list_price DECIMAL(18, 2),
+    median_ppsf DECIMAL(18, 6),
+    homes_sold DECIMAL(18, 6),
+    pending_sales DECIMAL(18, 6),
+    new_listings DECIMAL(18, 6),
+    inventory DECIMAL(18, 6)
+);
+
+-- House_Address Dimension
+CREATE TABLE Dim_House_Address (
+    address_id VARCHAR(70) NOT NULL PRIMARY KEY,
+    state_id VARCHAR(70),
+    zip INT,
+    property_street_address VARCHAR(255) NOT NULL,
+    property_city VARCHAR(70),
+    property_county VARCHAR(70)
+);
+
+-- House_Information Dimension
+CREATE TABLE Dim_House_Information (
+    house_info_id VARCHAR(70) NOT NULL PRIMARY KEY,
+    building_year_built DATE,
+    squarefeet DECIMAL(18, 6),
+    num_rooms DECIMAL(18, 6),
+    build_period_id VARCHAR(70),
+	property_type VARCHAR(70)
+);
+
+-- Fact Table
+CREATE TABLE Fact_House_Data (
+    id VARCHAR(70) NOT NULL PRIMARY KEY,
+    sale_price DECIMAL(18, 2),
+    calendar_id VARCHAR(70) NOT NULL,
+    market_id VARCHAR(70) NOT NULL,
+	address_id VARCHAR(70) NOT NULL,
+    house_info_id VARCHAR(70) NOT NULL,
+    FOREIGN KEY (calendar_id) REFERENCES Dim_Calendar(calendar_id),
+    FOREIGN KEY (market_id) REFERENCES Dim_Market(market_id),
+    FOREIGN KEY (address_id) REFERENCES Dim_House_Address(address_id),
+    FOREIGN KEY (house_info_id) REFERENCES Dim_House_Information(house_info_id)
+);
+ 
+-- Load Dim_Calendar
+BULK INSERT Dim_Calendar
+FROM 'C:\Users\Ben\Desktop\AIT580\Project\Data Warehouse\Dim_Calendar.csv'
+WITH (
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    FIRSTROW = 2,
+    DATAFILETYPE = 'char',
+    TABLOCK
+);
+
+-- Load Dim_Market
+BULK INSERT Dim_Market
+FROM 'C:\Users\Ben\Desktop\AIT580\Project\Data Warehouse\Dim_Market.csv'
+WITH (
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    FIRSTROW = 2,
+    DATAFILETYPE = 'char',
+    TABLOCK
+);
+
+-- Load Dim_House_Address
+BULK INSERT Dim_House_Address
+FROM 'C:\Users\Ben\Desktop\AIT580\Project\Data Warehouse\Dim_House_Address.csv'
+WITH (
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    FIRSTROW = 2,
+    DATAFILETYPE = 'char',
+    TABLOCK
+);
+
+-- Load Dim_House_Information
+BULK INSERT Dim_House_Information
+FROM 'C:\Users\Ben\Desktop\AIT580\Project\Data Warehouse\Dim_House_Information.csv'
+WITH (
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    FIRSTROW = 2,
+    DATAFILETYPE = 'char',
+    TABLOCK
+);
+
+-- Load Fact_House_Data
+BULK INSERT Fact_House_Data
+FROM 'C:\Users\Ben\Desktop\AIT580\Project\Data Warehouse\Fact_House_Data.csv'
+WITH (
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    FIRSTROW = 2,
+    DATAFILETYPE = 'char',
+    TABLOCK
+);
+
+SELECT * FROM Dim_Calendar
+SELECT * FROM Dim_Market
+SELECT * FROM Dim_House_Address
+SELECT * FROM Dim_House_Information
+SELECT * FROM Fact_House_Data
+
+
+--How has the preference for different property types changed over the years?
+SELECT
+    di.build_period_id,
+    di.property_type,
+    COUNT(fh.id) AS number_of_sales
+FROM
+    Fact_House_Data fh
+JOIN
+    Dim_House_Information di ON fh.house_info_id = di.house_info_id
+JOIN
+    Dim_Calendar dc ON fh.calendar_id = dc.calendar_id
+GROUP BY
+    di.build_period_id,
+    di.property_type
+ORDER BY
+    di.build_period_id,
+    di.property_type;
+
+
+
+
+
+-- Are there property types gaining popularity, and how does this impact their sale prices?
+WITH PropertyTypeChange AS (
+    SELECT
+        dh.property_type,
+        COUNT(fh.id) AS total_sales,
+        MIN(dc.year) AS start_year,
+        MAX(dc.year) AS end_year,
+        MIN(median_sale_price) AS start_median_price,
+        MAX(median_sale_price) AS end_median_price
+    FROM
+        Fact_House_Data fh
+    JOIN
+        Dim_House_Information dh ON fh.house_info_id = dh.house_info_id
+    JOIN
+        Dim_Calendar dc ON fh.calendar_id = dc.calendar_id
+    JOIN
+        Dim_Market dm ON fh.market_id = dm.market_id
+    GROUP BY
+        dh.property_type
+)
+
+
+SELECT
+    property_type,
+    total_sales,
+    start_year,
+    end_year,
+    start_median_price AS start_median_sale_price,
+    end_median_price AS end_median_sale_price,
+    (end_median_price - start_median_price) AS median_price_change,
+    (total_sales * 1.0) / (end_year - start_year + 1) AS avg_sales_growth
+FROM
+    PropertyTypeChange
+ORDER BY
+    median_price_change DESC;
