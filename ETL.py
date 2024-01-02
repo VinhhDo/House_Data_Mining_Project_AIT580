@@ -25,24 +25,6 @@ from airflow.providers.amazon.transfers.s3_to_s3_copy import S3ToS3CopyOperator
 pd.set_option('display.max_columns', None)
 warnings.filterwarnings('ignore')
 
-# Define default_args and dag parameters
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'start_date': datetime(2024, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-}
-
-dag = DAG(
-    'your_etl_dag',
-    default_args=default_args,
-    description='ETL DAG for loading and merging data from different sources',
-    schedule_interval=timedelta(days=1),
-)
-
 def redfin_extract_data(url):
     df_redfin_pandas = pd.read_csv(url, compression='gzip', sep='\t')
     file_str = 'redfin_data'
@@ -72,8 +54,8 @@ def extract_data_spark(url):
         .config("spark.driver.maxResultSize", "8g") \
         .getOrCreate()
 
-    csv_file_path = url
-    df_zillow_spark = spark.read.format('csv').option('header', 'true').option('inferSchema', 'true').load(csv_file_path)
+    file_path = url
+    df_zillow_spark = spark.read.format('csv').option('header', 'true').option('inferSchema', 'true').load(file_path)
     return df_zillow_spark
 
 def process_zillow_data(df_zillow_spark):
@@ -149,6 +131,21 @@ redfin_s3_key = 'redfin_data.csv'
 zillow_s3_key = 'zillow_data.csv'
 merged_s3_key = 'merged_data.csv'
 
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 1, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+with DAG('redfin_analytics_dag',
+        default_args=default_args,
+        # schedule_interval = '@weekly',
+        catchup=False) as dag:
 # Task to extract data from Redfin URL
 redfin_extract_task = PythonOperator(
     task_id='redfin_extract_task',
