@@ -201,15 +201,6 @@ merge_data_task = PythonOperator(
     dag=dag,
 )
 
-# Task to upload merged data to SageMaker
-upload_to_sagemaker_task = PythonOperator(
-    task_id='upload_to_sagemaker_task',
-    python_callable=extract_data_from_s3_to_sagemaker,
-    op_args=[merged_s3_bucket, merged_s3_key, 'local_merged_data.csv', 'your-sagemaker-instance-name', 'sagemaker/input'],
-    provide_context=True,
-    dag=dag,
-)
-
 # Set task dependencies
 redfin_extract_task >> process_redfin_task
 zillow_extract_task >> process_zillow_task
