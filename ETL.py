@@ -1,78 +1,76 @@
-#processing libraries
 from airflow import DAG
 from datetime import timedelta, datetime
 from airflow.operators.python import PythonOperator
+from airflow.operators.s3_to_s3_copy import S3ToS3CopyOperator
 import pandas as pd
 import boto3
-import requests
-from airflow.operators.bash_operator import BashOperator
-import pandas as pd
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, year, month, when, coalesce
 
 pd.set_option('display.max_columns', None)
 warnings.filterwarnings('ignore')
 
-url =  'https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_market_tracker/zip_code_market_tracker.tsv000.gz'
+# Define default_args and dag parameters
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 1, 1),
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'your_etl_dag',
+    default_args=default_args,
+    description='ETL DAG for loading and merging data from different sources',
+    schedule_interval=timedelta(days=1),
+)
 
 def redfin_extract_data(url):
     df_redfin_pandas = pd.read_csv(url, compression='gzip', sep='\t')
     file_str = 'redfin_data'
     output_file_path = f"/home/ubuntu/{file_str}.csv"
     df_redfin_pandas.to_csv(output_file_path, index=False)
-    return [output_file_path, file_str]
+    return output_file_path, file_str
 
 def process_redfin_data(df_redfin):
-    # Create new columns for month and year
-    df_redfin['period_end'] = pd.to_datetime(df_redfin['period_end'])  # Convert 'period_end' to datetime
-    df_redfin['month'] = df_redfin['period_end'].dt.month  # Extract month
-    df_redfin['year'] = df_redfin['period_end'].dt.year    # Extract year
+    df_redfin['period_end'] = pd.to_datetime(df_redfin['period_end'])
+    df_redfin['month'] = df_redfin['period_end'].dt.month
+    df_redfin['year'] = df_redfin['period_end'].dt.year
 
-    # Keep only the specified columns
     selected_columns = ['table_id', 'region', 'state', 'state_code', 'property_type',
                         'median_sale_price', 'median_list_price', 'median_ppsf',
                         'homes_sold', 'pending_sales', 'new_listings', 'inventory',
                         'parent_metro_region', 'month', 'year']
     df_redfin = df_redfin[selected_columns]
     df_redfin['region'] = df_redfin['region'].str.extract('(\d+)')
-
-    # Rename columns
     df_redfin = df_redfin.rename(columns={'region': 'zip'})
 
     return df_redfin
 
-)
-
-
-file_path_Zillow = 'C:/Users/Ben/Desktop/AIT580/Project/dolthub_us-housing-prices_main_sales.csv'
-
 def extract_data_spark(url):
-    # Create a Spark session with increased driver memory
     spark = SparkSession.builder \
-    .appName("example") \
-    .config("spark.driver.memory", "8g") \
-    .config("spark.driver.maxResultSize", "8g") \
-    .getOrCreate() 
-    # Specify the path to the CSV file
+        .appName("example") \
+        .config("spark.driver.memory", "8g") \
+        .config("spark.driver.maxResultSize", "8g") \
+        .getOrCreate()
+
     csv_file_path = url
-    # Read the CSV file into a PySpark DataFrame
     df_zillow_spark = spark.read.format('csv').option('header', 'true').option('inferSchema', 'true').load(csv_file_path)
     return df_zillow_spark
 
 def process_zillow_data(df_zillow_spark):
-    # Create new columns for month and year
     df_zillow_spark = df_zillow_spark.withColumn("month", month(col("sale_datetime")))
     df_zillow_spark = df_zillow_spark.withColumn("year", year(col("sale_datetime")))
 
-    # Select specific columns using Spark functions
     cols = ['state', 'property_zip5', 'property_street_address', 'property_city', 'property_county',
             'property_type', 'sale_price', 'building_year_built', 'month', 'year']
     df_zillow_spark = df_zillow_spark.select([col(c) for c in cols])
 
-    # Drop rows with null values
     df_zillow_spark = df_zillow_spark.dropna()
 
-    # Define the conditions for property_type mapping
     conditions = [
         (col("property_type").like("%RESIDENTIAL%"), "All Residentials"),
         (col("property_type").like("%SINGLE FAMILY%"), "Single Family Residential"),
@@ -81,7 +79,6 @@ def process_zillow_data(df_zillow_spark):
         (col("property_type").like("%TOWNHOUSE%"), "Townhouse")
     ]
 
-    # Use coalesce to handle multiple conditions and preserve the original 'property_type' if no condition is met
     df_zillow_spark = df_zillow_spark.withColumn("property_type",
                                                  coalesce(
                                                      when(conditions[0][0], conditions[0][1]),
@@ -92,14 +89,10 @@ def process_zillow_data(df_zillow_spark):
                                                      col("property_type")
                                                  ))
 
-    # Filter the DataFrame based on the list of property types
     property_types_to_keep = ['All Residential', 'Single Family Residential', 'Townhouse', 'Multi-Family (2-4 Unit)', 'Condo/Co-op']
     df_zillow_spark = df_zillow_spark.filter(col("property_type").isin(property_types_to_keep))
-
-    # Remove $0 value house
     df_zillow_spark = df_zillow_spark.filter(col("sale_price") != 0)
 
-    # Transform to Pandas
     df_zillow = df_zillow_spark.toPandas()
     return df_zillow
 
@@ -110,5 +103,111 @@ def extract_data_from_s3_to_sagemaker(s3_bucket, s3_key, local_file, sagemaker_i
     sagemaker = boto3.client('sagemaker')
     sagemaker.upload_data(path=sagemaker_path, bucket=sagemaker_instance, key_prefix='', body=open(local_file, 'rb'))
 
-# Example usage:
-extract_data_from_s3_to_sagemaker('redfin_transformed_data', 'your_data_file.csv', 'local_data.csv', 'your-sagemaker-instance-name', 'sagemaker/input'
+def merge_data(**kwargs):
+    # Implement your merging logic here
+    redfin_data_path = kwargs['ti'].xcom_pull(task_ids='process_redfin_task')[0]
+    zillow_data_path = kwargs['ti'].xcom_pull(task_ids='process_zillow_task')[0]
+
+    df_redfin = pd.read_csv(redfin_data_path)
+    df_zillow = pd.read_csv(zillow_data_path)
+
+    # Implement your merging logic (e.g., merging on common columns)
+    merged_data = pd.merge(df_redfin, df_zillow, on='common_column', how='inner')
+
+    # Save the merged data to a CSV file
+    merged_file_path = "/home/ubuntu/merged_data.csv"
+    merged_data.to_csv(merged_file_path, index=False)
+
+    return merged_file_path
+
+# Define URLs
+redfin_url = 'https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_market_tracker/city_market_tracker.tsv000.gz'
+zillow_url = 'https://www.dolthub.com/csv/dolthub/us-housing-prices/main'
+
+# Define S3 bucket names
+redfin_s3_bucket = 'your-redfin-s3-bucket'
+zillow_s3_bucket = 'your-zillow-s3-bucket'
+merged_s3_bucket = 'your-merged-s3-bucket'
+
+# Define S3 keys
+redfin_s3_key = 'redfin_data.csv'
+zillow_s3_key = 'zillow_data.csv'
+merged_s3_key = 'merged_data.csv'
+
+# Task to extract data from Redfin URL
+redfin_extract_task = PythonOperator(
+    task_id='redfin_extract_task',
+    python_callable=redfin_extract_data,
+    op_args=[redfin_url],
+    provide_context=True,
+    dag=dag,
+)
+
+# Task to process Redfin data
+process_redfin_task = PythonOperator(
+    task_id='process_redfin_task',
+    python_callable=process_redfin_data,
+    provide_context=True,
+    dag=dag,
+)
+
+# Task to extract data from Zillow URL
+zillow_extract_task = PythonOperator(
+    task_id='zillow_extract_task',
+    python_callable=extract_data_spark,
+    op_args=[zillow_url],
+    provide_context=True,
+    dag=dag,
+)
+
+# Task to process Zillow data
+process_zillow_task = PythonOperator(
+    task_id='process_zillow_task',
+    python_callable=process_zillow_data,
+    provide_context=True,
+    dag=dag,
+)
+
+# Task to copy data to S3
+redfin_copy_task = S3ToS3CopyOperator(
+    task_id='redfin_copy_task',
+    source_bucket_key=f'{redfin_s3_bucket}/{redfin_s3_key}',
+    dest_bucket_key=f'{merged_s3_bucket}/{redfin_s3_key}',
+    replace=True,
+    aws_conn_id='aws_default',
+    dag=dag,
+)
+
+zillow_copy_task = S3ToS3CopyOperator(
+    task_id='zillow_copy_task',
+    source_bucket_key=f'{zillow_s3_bucket}/{zillow_s3_key}',
+    dest_bucket_key=f'{merged_s3_bucket}/{zillow_s3_key}',
+    replace=True,
+    aws_conn_id='aws_default',
+    dag=dag,
+)
+
+# Task to merge data
+merge_data_task = PythonOperator(
+    task_id='merge_data_task',
+    python_callable=merge_data,  # You need to implement the merge_data function
+    provide_context=True,
+    dag=dag,
+)
+
+# Task to upload merged data to SageMaker
+upload_to_sagemaker_task = PythonOperator(
+    task_id='upload_to_sagemaker_task',
+    python_callable=extract_data_from_s3_to_sagemaker,
+    op_args=[merged_s3_bucket, merged_s3_key, 'local_merged_data.csv', 'your-sagemaker-instance-name', 'sagemaker/input'],
+    provide_context=True,
+    dag=dag,
+)
+
+# Set task dependencies
+redfin_extract_task >> process_redfin_task
+zillow_extract_task >> process_zillow_task
+[process_redfin_task, process_zillow_task] >> [redfin_copy_task, zillow_copy_task] >> merge_data_task
+merge_data_task >> upload_to_sagemaker_task
+
+    
