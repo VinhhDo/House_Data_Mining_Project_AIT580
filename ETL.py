@@ -14,12 +14,6 @@ warnings.filterwarnings('ignore')
 
 def redfin_extract_data(url):
     df_redfin_pandas = pd.read_csv(url, compression='gzip', sep='\t')
-    file_str = 'redfin_data'
-    output_file_path = f"/home/ubuntu/{file_str}.csv"
-    df_redfin_pandas.to_csv(output_file_path, index=False)
-    return output_file_path, file_str
-
-def process_redfin_data(df_redfin):
     df_redfin['period_end'] = pd.to_datetime(df_redfin['period_end'])
     df_redfin['month'] = df_redfin['period_end'].dt.month
     df_redfin['year'] = df_redfin['period_end'].dt.year
@@ -31,10 +25,13 @@ def process_redfin_data(df_redfin):
     df_redfin = df_redfin[selected_columns]
     df_redfin['region'] = df_redfin['region'].str.extract('(\d+)')
     df_redfin = df_redfin.rename(columns={'region': 'zip'})
-
+    file_str = 'redfin_data'
+    output_file_path = f"/home/ubuntu/{file_str}.csv"
+    df_redfin.to_csv(output_file_path, index=False)
+    
     return df_redfin
 
-def extract_data_spark(url):
+def zillow_extract_data(url):
     spark = SparkSession.builder \
         .appName("example") \
         .config("spark.driver.memory", "8g") \
@@ -43,9 +40,7 @@ def extract_data_spark(url):
 
     file_path = url
     df_zillow_spark = spark.read.format('csv').option('header', 'true').option('inferSchema', 'true').load(file_path)
-    return df_zillow_spark
-
-def process_zillow_data(df_zillow_spark):
+    
     df_zillow_spark = df_zillow_spark.withColumn("month", month(col("sale_datetime")))
     df_zillow_spark = df_zillow_spark.withColumn("year", year(col("sale_datetime")))
 
@@ -78,12 +73,15 @@ def process_zillow_data(df_zillow_spark):
     df_zillow_spark = df_zillow_spark.filter(col("sale_price") != 0)
 
     df_zillow = df_zillow_spark.toPandas()
+    file_str = 'redfin_data'
+    output_file_path = f"/home/ubuntu/{file_str}.csv"
+    df_zillow.to_csv(output_file_path, index=False)
     return df_zillow
 
 def merge_data(**kwargs):
     # Implement your merging logic here
-    redfin_data_path = kwargs['ti'].xcom_pull(task_ids='process_redfin_data')[0]
-    zillow_data_path = kwargs['ti'].xcom_pull(task_ids='process_zillow_data')[0]
+    redfin_data_path = kwargs['ti'].xcom_pull(task_ids='redfin_extract_data')[0]
+    zillow_data_path = kwargs['ti'].xcom_pull(task_ids='zillow_extract_data')[0]
 
     df_redfin = pd.read_csv(redfin_data_path)
     df_zillow = pd.read_csv(zillow_data_path)
@@ -139,27 +137,12 @@ redfin_extract_task = PythonOperator(
     dag=dag,
 )
 
-# Task to process Redfin data
-process_redfin_task = PythonOperator(
-    task_id='process_redfin_task',
-    python_callable=process_redfin_data,
-    provide_context=True,
-    dag=dag,
-)
 
 # Task to extract data from Zillow URL
 zillow_extract_task = PythonOperator(
     task_id='zillow_extract_task',
-    python_callable=extract_data_spark,
+    python_callable=zillow_extract_task,
     op_args=[zillow_url],
-    provide_context=True,
-    dag=dag,
-)
-
-# Task to process Zillow data
-process_zillow_task = PythonOperator(
-    task_id='process_zillow_task',
-    python_callable=process_zillow_data,
     provide_context=True,
     dag=dag,
 )
@@ -192,9 +175,6 @@ merge_data_task = PythonOperator(
 )
 
 # Set task dependencies
-redfin_extract_task >> process_redfin_task
-zillow_extract_task >> process_zillow_task
 [process_redfin_task, process_zillow_task] >> [redfin_copy_task, zillow_copy_task] >> merge_data_task
-merge_data_task >> upload_to_sagemaker_task
 
     
