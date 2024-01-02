@@ -12,20 +12,11 @@ The overarching goal is to empower real estate investors with actionable insight
 Redfin API: https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_market_tracker/zip_code_market_tracker.tsv000.gz
 Zillow Database: https://www.dolthub.com/repositories/dolthub/us-housing-prices-v2/data/main
 
-## File descriptions
+## Objective
+1. Identifying the current market conditions and trends in the real estate industry.
+2. Analyzing factors that can potentially influence house prices in the market.
+3. Providing solutions for real estate investors to optimize their investments based on insights from data mining.
 
-The project has a main directory, `airflow`, which contains two further directories named `dags` and `plugins`. 
-
-`dags` directory contains:
-- `udac_example_dag.py`: Defines main DAG, tasks and link the tasks in required order.
-- `create_tables.sql`: SQL create table statements provided with template.
-
-`plugins/operators` directory contains:
-- `stage_redshift.py`: Defines `StageToRedshiftOperator` to copy JSON data from S3 to staging tables in the Redshift via `copy` command.
-- `data_quality.py`: Defines `DataQualityOperator` to run data quality checks on all tables passed as parameter
-- `load_dimension.py`: Defines `LoadDimensionOperator` to load a dimension table from staging table(s)
-- `load_fact.py`: Defines `LoadFactOperator` to load fact table from staging table(s)
-- `sql_queries.py`: Contains SQL queries for the ETL pipeline
 
 ## Configurations
 
