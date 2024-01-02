@@ -19,17 +19,29 @@ Zillow Database: https://www.dolthub.com/repositories/dolthub/us-housing-prices-
 
 ## Configure
 sudo apt update
+
 sudo apt install python3-pip
+
 sudo apt install python3.10-venv
+
 python3 -m venv redfin_venv
+
 source redfin_venv/bin/activate
+
 pip install pandas
+
 pip install boto3
+
 pip install --upgrade awscli
+
 pip install apache-airflow
+
 pip install apache-airflow-providers-amazon
+
 pip install virtualenv
+
 aws configure
+
 airflow standalone
 ![Airflow](https://github.com/VinhhDo/House_Data_Mining_Project_AIT580/assets/98499217/8e186f93-65c1-46a5-8761-8eb231738719)
 
