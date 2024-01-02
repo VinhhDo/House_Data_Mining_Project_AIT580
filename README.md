@@ -17,7 +17,7 @@ Zillow Database: https://www.dolthub.com/repositories/dolthub/us-housing-prices-
 2. Analyzing factors that can potentially influence house prices in the market.
 3. Providing solutions for real estate investors to optimize their investments based on insights from data mining.
 
-##Configure
+## Configure
 sudo apt update
 sudo apt install python3-pip
 sudo apt install python3.10-venv
