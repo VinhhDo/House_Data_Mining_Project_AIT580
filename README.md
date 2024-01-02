@@ -6,6 +6,8 @@ The project at hand is dedicated to the implementation of ETL (Extract, Transfor
 
 The overarching goal is to empower real estate investors with actionable insights derived from AWS-based ETL pipelines and data mining techniques. This involves not only understanding current market conditions and trends but also identifying factors influencing house prices. The project aims to provide a streamlined and efficient approach to data processing and analysis, ensuring that investors can make well-informed decisions in the dynamic real estate market.
 
+![ETL](https://github.com/VinhhDo/House_Data_Mining_Project_AIT580/assets/98499217/cdbbb20a-95dc-4968-886c-03c5b268b09e)
+
 ## Datasets
 The datasets used in this project are stored within S3 buckets, which can be found under the following URIs:
 
