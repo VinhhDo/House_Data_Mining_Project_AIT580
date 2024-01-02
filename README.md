@@ -1,5 +1,4 @@
-# Project: Real Estate Data Mining (Data Pipeline with Airflow on EC2) 
-
+# Project: Real Estate Data Mining 
 ## Overview
 
 The project at hand is dedicated to the implementation of ETL (Extract, Transform, Load) pipelines and data mining within the AWS (Amazon Web Services) environment, specifically focusing on the real estate domain. Also, the project leverages datasets from Redfin Real Estate and the Zillow database, providing a foundation for in-depth analysis. Three key pillars form the project's focus:
