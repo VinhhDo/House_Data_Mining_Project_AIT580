@@ -87,13 +87,6 @@ def process_zillow_data(df_zillow_spark):
     df_zillow = df_zillow_spark.toPandas()
     return df_zillow
 
-def extract_data_from_s3_to_sagemaker(s3_bucket, s3_key, local_file, sagemaker_instance, sagemaker_path):
-    s3 = boto3.client('s3')
-    s3.download_file(s3_bucket, s3_key, local_file)
-
-    sagemaker = boto3.client('sagemaker')
-    sagemaker.upload_data(path=sagemaker_path, bucket=sagemaker_instance, key_prefix='', body=open(local_file, 'rb'))
-
 def merge_data(**kwargs):
     # Implement your merging logic here
     redfin_data_path = kwargs['ti'].xcom_pull(task_ids='process_redfin_task')[0]
