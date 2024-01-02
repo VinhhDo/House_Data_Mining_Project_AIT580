@@ -6,12 +6,6 @@ import pandas as pd
 import boto3
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, year, month, when, coalesce
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
-from pyspark.sql import Row
-from pyspark.sql.functions import col, year, month, when, coalesce
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib as mpl
