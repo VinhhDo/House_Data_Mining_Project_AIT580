@@ -1,7 +1,6 @@
 from airflow import DAG
 from datetime import timedelta, datetime
 from airflow.operators.python import PythonOperator
-from airflow.operators.s3_to_s3_copy import S3ToS3CopyOperator
 import pandas as pd
 import boto3
 from pyspark.sql import SparkSession
@@ -15,6 +14,7 @@ from matplotlib.ticker import ScalarFormatter
 import matplotlib.ticker as ticker
 import uuid
 from airflow.providers.amazon.transfers.s3_to_s3_copy import S3ToS3CopyOperator
+import warnings
 
 pd.set_option('display.max_columns', None)
 warnings.filterwarnings('ignore')
@@ -89,8 +89,8 @@ def process_zillow_data(df_zillow_spark):
 
 def merge_data(**kwargs):
     # Implement your merging logic here
-    redfin_data_path = kwargs['ti'].xcom_pull(task_ids='process_redfin_task')[0]
-    zillow_data_path = kwargs['ti'].xcom_pull(task_ids='process_zillow_task')[0]
+    redfin_data_path = kwargs['ti'].xcom_pull(task_ids='process_redfin_data')[0]
+    zillow_data_path = kwargs['ti'].xcom_pull(task_ids='process_zillow_data')[0]
 
     df_redfin = pd.read_csv(redfin_data_path)
     df_zillow = pd.read_csv(zillow_data_path)
