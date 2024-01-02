@@ -6,6 +6,21 @@ import pandas as pd
 import boto3
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, year, month, when, coalesce
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql import Row
+from pyspark.sql.functions import col, year, month, when, coalesce
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib as mpl
+import seaborn as sns
+from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import ScalarFormatter
+import matplotlib.ticker as ticker
+import uuid
+from airflow.providers.amazon.transfers.s3_to_s3_copy import S3ToS3CopyOperator
 
 pd.set_option('display.max_columns', None)
 warnings.filterwarnings('ignore')
@@ -125,9 +140,9 @@ redfin_url = 'https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_marke
 zillow_url = 'https://www.dolthub.com/csv/dolthub/us-housing-prices/main'
 
 # Define S3 bucket names
-redfin_s3_bucket = 'your-redfin-s3-bucket'
-zillow_s3_bucket = 'your-zillow-s3-bucket'
-merged_s3_bucket = 'your-merged-s3-bucket'
+redfin_s3_bucket = 'redfin-s3-bucket'
+zillow_s3_bucket = 'zillow-s3-bucket'
+merged_s3_bucket = 'merged-s3-bucket'
 
 # Define S3 keys
 redfin_s3_key = 'redfin_data.csv'
