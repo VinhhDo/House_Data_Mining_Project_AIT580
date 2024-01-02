@@ -4,17 +4,7 @@
 
 The project at hand is dedicated to the implementation of ETL (Extract, Transform, Load) pipelines and data mining within the AWS (Amazon Web Services) environment, specifically focusing on the real estate domain. Also, the project leverages datasets from Redfin Real Estate and the Zillow database, providing a foundation for in-depth analysis. Three key pillars form the project's focus:
 
-    Market Conditions and Trends: The analysis scrutinizes current market conditions and trends, offering a nuanced understanding of average sale prices, inventory levels, and broader market trends across different regions.
-
-    Influencing Factors on House Prices: Delving into the intricate factors that can potentially sway house prices, the project aims to equip investors with insights to navigate market fluctuations and make informed decisions.
-
-    Investment Optimization Solutions: By employing data mining techniques, the project seeks to provide actionable solutions for real estate investors. These insights are designed to optimize investment strategies, empowering investors to make strategic choices that align with dynamic market conditions.
-
-## Project Description
-
-This project will introduce you to the core concepts of Apache Airflow. To complete the project, you will need to create your own custom operators to perform tasks such as staging the data, filling the data warehouse, and running checks on the data as the final step. 
-We have provided you with a project template that takes care of all the imports and provides four empty operators that need to be implemented into functional pieces of a data pipeline. The template also contains a set of tasks that need to be linked to achieve a coherent and sensible data flow within the pipeline.
-You'll be provided with a helpers class that contains all the SQL transformations. Thus, you won't need to write the ETL yourselves, but you'll need to execute it with your custom operators.
+The overarching goal is to empower real estate investors with actionable insights derived from AWS-based ETL pipelines and data mining techniques. This involves not only understanding current market conditions and trends but also identifying factors influencing house prices. The project aims to provide a streamlined and efficient approach to data processing and analysis, ensuring that investors can make well-informed decisions in the dynamic real estate market.
 
 ## Datasets
 The datasets used in this project are stored within S3 buckets, which can be found under the following URIs:
