@@ -9,10 +9,8 @@ The overarching goal is to empower real estate investors with actionable insight
 ![ETL](https://github.com/VinhhDo/House_Data_Mining_Project_AIT580/assets/98499217/cdbbb20a-95dc-4968-886c-03c5b268b09e)
 
 ## Datasets
-The datasets used in this project are stored within S3 buckets, which can be found under the following URIs:
-
-Log data: `s3://udacity-dend/log_data`
-Song data: `s3://udacity-dend/song_data`
+Redfin API: https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_market_tracker/zip_code_market_tracker.tsv000.gz
+Zillow Database: https://www.dolthub.com/repositories/dolthub/us-housing-prices-v2/data/main
 
 ## File descriptions
 
