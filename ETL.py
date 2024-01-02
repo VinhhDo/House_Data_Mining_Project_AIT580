@@ -5,13 +5,6 @@ import pandas as pd
 import boto3
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, year, month, when, coalesce
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import matplotlib as mpl
-import seaborn as sns
-from matplotlib.ticker import FuncFormatter
-from matplotlib.ticker import ScalarFormatter
-import matplotlib.ticker as ticker
 import uuid
 from airflow.providers.amazon.transfers.s3_to_s3_copy import S3ToS3CopyOperator
 import warnings
