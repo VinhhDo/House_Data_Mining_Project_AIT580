@@ -10,7 +10,29 @@ The overarching goal is to empower real estate investors with actionable insight
 ## Datasets
 Redfin API: https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_market_tracker/zip_code_market_tracker.tsv000.gz
 Zillow Database: https://www.dolthub.com/repositories/dolthub/us-housing-prices-v2/data/main
-
+#### Transformed Dataset 
+| #   | Column                   | Dtype             |
+| --- | ------------------------ | ----------------- |
+| 0   | state_x                  | object            |
+| 1   | zip                      | object            |
+| 2   | property_street_address  | object            |
+| 3   | property_city            | object            |
+| 4   | property_county          | object            |
+| 5   | property_type            | object            |
+| 6   | sale_price               | float64           |
+| 7   | building_year_built      | datetime64[ns]    |
+| 8   | table_id                 | int64             |
+| 9   | state_y                  | object            |
+| 10  | state_code               | object            |
+| 11  | median_sale_price        | float64           |
+| 12  | median_list_price        | float64           |
+| 13  | median_ppsf              | float64           |
+| 14  | homes_sold               | float64           |
+| 15  | pending_sales            | float64           |
+| 16  | new_listings             | float64           |
+| 17  | inventory                | float64           |
+| 18  | parent_metro_region      | object            |
+| 19  | date                     | datetime64[ns]    |
 ## Objective
 1. Identifying the current market conditions and trends in the real estate industry.
 2. Analyzing factors that can potentially influence house prices in the market.
