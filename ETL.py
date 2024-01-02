@@ -95,8 +95,12 @@ def merge_data(**kwargs):
     df_redfin = pd.read_csv(redfin_data_path)
     df_zillow = pd.read_csv(zillow_data_path)
 
-    # Implement your merging logic (e.g., merging on common columns)
-    merged_data = pd.merge(df_redfin, df_zillow, on='common_column', how='inner')
+    
+    #Rename columns
+    df_zillow = df_zillow.rename(columns={'property_zip5': 'zip'})
+
+    # Merge dataframes
+    merged_data = pd.merge(df_zillow, df_redfin, on=['zip', 'month', 'year', 'property_type'], how='inner')
 
     # Save the merged data to a CSV file
     merged_file_path = "/home/ubuntu/merged_data.csv"
