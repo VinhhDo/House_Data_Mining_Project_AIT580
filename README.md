@@ -1,4 +1,4 @@
-# Project: Data Pipeline with Airflow 
+# Project: Real Estate Data Mining (Data Pipeline with Airflow on EC2) 
 
 ## Overview
 
