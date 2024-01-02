@@ -18,11 +18,6 @@ Zillow Database: https://www.dolthub.com/repositories/dolthub/us-housing-prices-
 3. Providing solutions for real estate investors to optimize their investments based on insights from data mining.
 
 
-## Configurations
+## Data Warehouse
 
-- Create a Redshift cluster in `us-west2` 
-- Within the Udacity workspace terminal, run the following command: `/opt/airflow/start.sh` and subsequently connect with the Airflow UI
-- Within Airflow, add the following two connections:
-    - AWS credentials, named `aws_credentials`
-    - Connection to Redshift, named `redshift`
-- The DAG named `udac_example_dag` should be visible in the UI - click on run
+![Data_Warehouse](https://github.com/VinhhDo/House_Data_Mining_Project_AIT580/assets/98499217/d0780ed2-90e5-41c1-8ab3-ec40f5221ca2)
