@@ -1,5 +1,4 @@
 import pandas as pd
-import boto3
 import requests
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
