@@ -28,7 +28,9 @@ def redfin_extract_data(url):
     file_str = 'redfin_data'
     output_file_path = f"/home/ubuntu/{file_str}.csv"
     df_redfin.to_csv(output_file_path, index=False)
-    
+    # Upload to S3
+    s3_client = boto3.client('s3')
+    s3_client.upload_file(output_file_path, 'redfin-s3-bucket', 'redfin_data.csv')
     return df_redfin
 
 def zillow_extract_data(url):
@@ -76,17 +78,29 @@ def zillow_extract_data(url):
     file_str = 'redfin_data'
     output_file_path = f"/home/ubuntu/{file_str}.csv"
     df_zillow.to_csv(output_file_path, index=False)
+
+    # Upload to S3
+    s3_client = boto3.client('s3')
+    s3_client.upload_file(output_file_path, 'zillow-s3-bucket', 'zillow-data.csv')
     return df_zillow
 
 def merge_data(**kwargs):
-    # Implement your merging logic here
-    redfin_data_path = kwargs['ti'].xcom_pull(task_ids='redfin_extract_data')[0]
-    zillow_data_path = kwargs['ti'].xcom_pull(task_ids='zillow_extract_data')[0]
 
-    df_redfin = pd.read_csv(redfin_data_path)
-    df_zillow = pd.read_csv(zillow_data_path)
+    # Download files from S3
+    s3_client = boto3.client('s3')
 
-    
+    # Download Redfin data
+    redfin_local_path = '/home/ubuntu/redfin-data.csv'
+    s3_client.download_file(merged_s3_bucket, redfin_s3_key, redfin_local_path)
+
+    # Download Zillow data
+    zillow_local_path = '/home/ubuntu/zillow-data.csv'
+    s3_client.download_file(merged_s3_bucket, zillow_s3_key, zillow_local_path)
+
+    # Read dataframes
+    df_redfin = pd.read_csv(redfin_local_path)
+    df_zillow = pd.read_csv(zillow_local_path)
+
     #Rename columns
     df_zillow = df_zillow.rename(columns={'property_zip5': 'zip'})
 
@@ -110,7 +124,7 @@ merged_s3_bucket = 'merged-s3-bucket'
 
 # Define S3 keys
 redfin_s3_key = 'redfin_data.csv'
-zillow_s3_key = 'zillow_data.csv'
+zillow_s3_key = 'zillow-data.csv'
 merged_s3_key = 'merged_data.csv'
 
 
